@@ -16,7 +16,7 @@ function request_update($name, $response, $conn, $insert){
 
 function request_settings($name){
     $conn = new Database('settings');
-    $conn->statement('SELECT *, IF(HOUR(TIMEDIFF(NOW(), updated)) >= 1, 1, 0) AS OlderThanAnHour FROM cache WHERE name=?');
+    $conn->statement('SELECT *, IF(HOUR(TIMEDIFF(NOW(), updated)) >= 1, 1, 0) AS StaleData FROM cache WHERE name=?');
     $conn->execute([$name]);
 
     return $conn;
@@ -29,11 +29,13 @@ function request_api($name, $type){
 
     $insert = true;
 
+    $response = null;
+
     if( $data ){
         $response = $data['data'];
         // and here we would check if we need to update our cache
         
-        if( !$data['OlderThanAnHour'] ){
+        if( !$data['StaleData'] ){
             return $response;
         }
 
@@ -43,7 +45,7 @@ function request_api($name, $type){
 
     $old = $response;
 
-    $response = api_request($conn,$name);
+    $response = api_request($conn,$name,$type);
 
     if(!$response){
         return $old;
@@ -63,7 +65,7 @@ function request_forecast(){
 }
 
 function request_photos(){
-    return request_
+    return request_api('photos',Config::API_TYPE_PHOTOS);
 }
 
 function api_path( $type ){
