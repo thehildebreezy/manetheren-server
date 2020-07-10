@@ -1,0 +1,11 @@
+# Step 1 - Raspberry Pi Config
+
+# Step 2 - Install web server
+
+# Step 4 - Set up database
+
+# Step 3 - Install Application stuff Python 3
+sudo apt-get install python3
+sudo apt-get install python3-pyside2*
+
+sudo apt-get install
