@@ -27,7 +27,8 @@ function request_api($name, $type){
     $response = null;
 
     // check to see if we have any cached data in the Database
-    $conn = request_cache($name,['staleName'=>'StaleData']);
+    // 3600 seconds in an hour
+    $conn = request_cache($name,['staleName'=>'StaleData','staleTime',3600]);
     $data = $conn->next();
 
 
@@ -84,9 +85,9 @@ function request_cache($name,$args){
     $conn = new Database('settings');
     // load any deviations from defaults
     $staleName = isset($args['staleName']) ? $args['staleName'] : 'isStale';
-    $staleTime = isset($args['staleTime']) ? $args['staleTime'] : 60;
+    $staleTime = isset($args['staleTime']) ? $args['staleTime'] : 600; // 60 sec * 10 min
     // process and execute statement
-    $conn->statement("SELECT *, IF(MINUTE(TIMEDIFF(NOW(), updated)) >= $staleTime, 1, 0) AS $staleName FROM cache WHERE name=?");
+    $conn->statement("SELECT *, IF(TIMEDIFF(NOW(), updated) >= $staleTime, 1, 0) AS $staleName FROM cache WHERE name=?");
     $conn->execute([$name]);
     return $conn;
 }

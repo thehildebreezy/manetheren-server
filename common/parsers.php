@@ -53,6 +53,44 @@ class OpenWeatherMapParser extends APIParser {
 
     // we don't have to do anything yet
     // I just want the parser to quietly pass the data along without modifying
+    function result($name){
+        // version 0 allows "other" version
+        if( $name == "forecast" &&
+            $this->version == 0 && 
+            isset($_GET['other']) && 
+            $_GET['other'] == 'simple' ){
 
+                // Generate an idea of what day it is from the first listed
+                // date time text group from the OWM response
+
+                $d = new DateTime( $this->raw['list'][0]['dt'] );
+                $d->setTime(0,0); // reset time to 0 in case
+
+                $newList = array();
+
+                // 2020-07-11 00:00:00
+
+
+                // now find the first item in the forecast that beats this day; i.e, date+1
+                $nextDayIndex = 0;
+                for( $i=0; $i < count($this->raw['list']); $i++ ){
+                    $next = new DateTime( $this->raw['list'][i]['dt'] );
+                    $next.setTime(0,0);   // reset day to 0 hours like we did to the base date
+                    if($next > $d){         // found day > today
+                        if( isset($this->raw['list'][i+4]) ){
+                            $newList[count($newList)] = $this->raw['list'][i];
+                        }
+                        $d = $next;
+                    }
+                }
+
+                $this->parsed = $this->raw;
+                $this->parsed['list'] = $newList;
+                return json_encode($this->parsed);
+            
+        }
+        
+        return parent::result($name);
+    }
 }
 ?>
