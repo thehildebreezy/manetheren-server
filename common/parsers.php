@@ -12,9 +12,9 @@
  */
 class APIParser {
 
-    private $raw = null;
-    private $parsed = null;
-    private $version = 1;
+    protected $raw = null;
+    protected $parsed = null;
+    protected $version = 1;
 
     /**
      * Construct the APIParser class and load the raw data into memory for processing
@@ -50,7 +50,8 @@ class PhotoParser extends APIParser {
  * to provide clean data for weather and forecast data
  */
 class OpenWeatherMapParser extends APIParser {
-
+    
+    
     // we don't have to do anything yet
     // I just want the parser to quietly pass the data along without modifying
     function result($name){
@@ -68,9 +69,6 @@ class OpenWeatherMapParser extends APIParser {
 
                 $newList = array();
 
-                // 2020-07-11 00:00:00
-
-
                 // now find the first item in the forecast that beats this day; i.e, date+1
                 $nextDayIndex = 0;
                 for( $i=0; $i < count($this->raw['list']); $i++ ){
@@ -84,6 +82,7 @@ class OpenWeatherMapParser extends APIParser {
                     }
                 }
 
+                echo($this->raw)
                 $this->parsed = $this->raw;
                 $this->parsed['list'] = $newList;
                 return json_encode($this->parsed);
