@@ -41,7 +41,8 @@ function request_api($name, $type){
         
         // if the data is not stale, return the cached data to the user and exit function
         if( !$data['StaleData'] ){
-            return $response;
+            return request_parse( $name, $type, $response );
+            //return $response;
         }
 
         // we found cached data for this $name, we will not be inserting a new row
@@ -58,15 +59,16 @@ function request_api($name, $type){
     // if we didn't get a response from the server, serve up the stale cached data
     // and exit the function
     if(!$response){
-        return $old;
+        return request_parse( $name, $type, $old );
+        //return $old;
     }
-
-    // parse the response to clean our data up
-    $response = request_parse( $name, $type, $response );
 
     // if we got data from the server, we'll parse it now
     // update our cache
     request_update($name,$response,$conn,$insert);
+
+    // parse the response to clean our data up
+    $response = request_parse( $name, $type, $response );
 
     // return the response to the end point
     return $response;

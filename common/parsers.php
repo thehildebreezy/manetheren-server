@@ -21,7 +21,7 @@ class APIParser {
      * @param raw string the raw JSON string we want to make our own
      */
     function __construct( $raw ){
-        $this->raw = json_decode( $raw );
+        $this->raw = json_decode( $raw, true );
         $this->version = isset($_GET['v']) ? intval($_GET['v']) : 1;
     }
 
@@ -51,10 +51,10 @@ class PhotoParser extends APIParser {
  */
 class OpenWeatherMapParser extends APIParser {
     
-    
     // we don't have to do anything yet
     // I just want the parser to quietly pass the data along without modifying
     function result($name){
+        
         // version 0 allows "other" version
         if( $name == "forecast" &&
             $this->version == 0 && 
@@ -64,7 +64,7 @@ class OpenWeatherMapParser extends APIParser {
                 // Generate an idea of what day it is from the first listed
                 // date time text group from the OWM response
 
-                $d = new DateTime( $this->raw['list'][0]['dt'] );
+                $d = new DateTime( $this->raw['list'][0]['dt_txt'] );
                 $d->setTime(0,0); // reset time to 0 in case
 
                 $newList = array();
@@ -72,17 +72,16 @@ class OpenWeatherMapParser extends APIParser {
                 // now find the first item in the forecast that beats this day; i.e, date+1
                 $nextDayIndex = 0;
                 for( $i=0; $i < count($this->raw['list']); $i++ ){
-                    $next = new DateTime( $this->raw['list'][i]['dt'] );
-                    $next.setTime(0,0);   // reset day to 0 hours like we did to the base date
+                    $next = new DateTime( $this->raw['list'][$i]['dt_txt'] );
+                    $next->setTime(0,0);   // reset day to 0 hours like we did to the base date
                     if($next > $d){         // found day > today
-                        if( isset($this->raw['list'][i+4]) ){
-                            $newList[count($newList)] = $this->raw['list'][i];
+                        if( isset($this->raw['list'][$i+4]) ){
+                            $newList[count($newList)] = $this->raw['list'][$i+4];
                         }
                         $d = $next;
                     }
                 }
 
-                echo($this->raw)
                 $this->parsed = $this->raw;
                 $this->parsed['list'] = $newList;
                 return json_encode($this->parsed);
