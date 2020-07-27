@@ -217,4 +217,6 @@ function request_forecast(){
 function request_photos(){
     return request_api('photos',Config::API_TYPE_PHOTOS);
 }
+
+
 ?>
