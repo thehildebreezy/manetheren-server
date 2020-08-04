@@ -61,6 +61,7 @@ class OpenWeatherMapParser extends APIParser {
             isset($_GET['other']) && 
             $_GET['other'] == 'simple' ){
 
+
                 // Generate an idea of what day it is from the first listed
                 // date time text group from the OWM response
 
@@ -75,8 +76,8 @@ class OpenWeatherMapParser extends APIParser {
                     $next = new DateTime( $this->raw['list'][$i]['dt_txt'] );
                     $next->setTime(0,0);   // reset day to 0 hours like we did to the base date
                     if($next > $d){         // found day > today
-                        if( isset($this->raw['list'][$i+4]) ){
-                            $newList[count($newList)] = $this->raw['list'][$i+4];
+                        if( isset($this->raw['list'][$i+5]) ){
+                            $newList[count($newList)] = $this->raw['list'][$i+5];
                         }
                         $d = $next;
                     }

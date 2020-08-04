@@ -1,16 +1,13 @@
 <?php 
 if( isset($_GET['adjust']) && $_GET['adjust'] == 'timezone'):
-    require_once("../common/database.php");
+    require_once("../common/settings.php");
 
-    $conn = new Database('settings');
-    $conn->statement("SELECT * FROM general WHERE name='timezone'");
-    $conn->execute();
-    $data = $conn->next();
+    $settings = new Settings();
     
-    $timezone = 'EST';
+    $timezone = $settings->textValue('general','timezone');
     
-    if( $data ){
-        $timezeone =  $data['textval'];
+    if( !$timezone ){
+        $timezeone =  'EST';
     }
 
     $off = timezone_offset_get( timezone_open( $timezone ), new DateTime() );

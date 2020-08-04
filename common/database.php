@@ -79,6 +79,7 @@ class Database {
      * @return array an associative array of a single database row
      */
     function next(){
+        if( !$this->statement ) return null;
         return $this->statement->fetch();
     }
 

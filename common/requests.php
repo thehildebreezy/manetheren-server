@@ -6,6 +6,7 @@
  * @version 1.0
  */
 require_once('database.php');
+require_once('settings.php');
 require_once('config.php');
 require_once('parsers.php');
 
@@ -107,19 +108,10 @@ function request_remote($conn, $name, $type){
     // if we are requesting services from a weather API
     if( $type == Config::API_TYPE_WEATHER ){
 
-        // look in the settings data base to see if there is any configurations for weather
-        // that we can use to customize the results
-        $conn->statement('SELECT * FROM weather WHERE name=?');
-        $conn->execute(['zip']);
-        $data = $conn->next();
-
-        // If not we're going to default to Fort Bragg, NC
-        $zip = 28310;
-
-        // Otherwise if there is, we'll use what is configured in the database
-        if( $data ){
-            $zip = $data['intval'];
-        }
+        // get the zip value
+        $settings = new Settings();
+        $zip = $settings->intValue('weather','zip');
+        if( !$zip ) $zip = 28310;
 
         // pull the path to our chosen API from our Config class and specify using name wether it
         // is weather or forcast, the zip code, and provide the API key
