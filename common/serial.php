@@ -37,6 +37,7 @@ class SerialConnection
         if( !$n ){
             echo "Serial connect failed on socket send\n";
         }
+        return $n;
     }
 
     // method declaration
@@ -50,7 +51,7 @@ class SerialConnection
         $len = pack("N",strlen($message));
 
         $msg = "\x00\xFA".$len."\x07".$message;
-        $this->sendString($msg);
+        return $this->sendString($msg);
     }
 }
 ?>

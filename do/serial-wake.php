@@ -6,5 +6,10 @@
 
 require_once('../common/serial.php');
 $conn = new SerialConnection();
-$conn->sendOther('wake.php');
+// this will prompt the far end to access 
+// 'services/wake.php' 
+$woke = $conn->sendOther('wake.php');
+if( $woke ){
+    echo "Successfully woke";
+}
 ?>

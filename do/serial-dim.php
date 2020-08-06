@@ -5,5 +5,10 @@
  */
 require_once('../common/serial.php');
 $conn = new SerialConnection();
-$conn->sendOther('dim.php');
+// this will prompt the far end to access 
+// 'services/dim.php' 
+$dimmed = $conn->sendOther('dim.php');
+if( $dimmed ){
+    echo "Successfully dimmed";
+}
 ?>
