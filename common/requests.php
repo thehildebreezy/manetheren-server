@@ -18,7 +18,8 @@ require_once('parsers.php');
  * @param type int type of service being requested as a predefined value from Config class
  * @return string the JSON string value of the service response
  */
-function request_api($name, $type){
+function request_api($name, $type, $cache = true){
+
 
     // Assume first that we do not have cached data and will need to insert
     // a new response into our cache table
@@ -27,46 +28,58 @@ function request_api($name, $type){
     // Assume we have not received any cached data or remote server data
     $response = null;
 
-    // check to see if we have any cached data in the Database
-    // 3600 seconds in an hour
-    $conn = request_cache($name,['staleName'=>'StaleData','staleTime',3600]);
-    $data = $conn->next();
+    // initialize for later reference
+    $conn = null;
+    $data = null;
+
+    // only cache if we want to cache, otherwise no cache
+    if( $cache ){
+
+        // check to see if we have any cached data in the Database
+        // 3600 seconds in an hour
+        $conn = request_cache($name,['staleName'=>'StaleData','staleTime',3600]);
+        $data = $conn->next();
 
 
-    // if we do have data in the cache table, check if it is useable
-    if( $data ){
+        // if we do have data in the cache table, check if it is useable
+        if( $data ){
 
-        // save the cached data as the response even if it is stale in case
-        // there is no server response
-        $response = $data['data'];
-        
-        // if the data is not stale, return the cached data to the user and exit function
-        if( !$data['StaleData'] ){
-            return request_parse( $name, $type, $response );
-            //return $response;
+            // save the cached data as the response even if it is stale in case
+            // there is no server response
+            $response = $data['data'];
+            
+            // if the data is not stale, return the cached data to the user and exit function
+            if( !$data['StaleData'] ){
+                return request_parse( $name, $type, $response );
+                //return $response;
+            }
+
+            // we found cached data for this $name, we will not be inserting a new row
+            $insert = false;
+
         }
 
-        // we found cached data for this $name, we will not be inserting a new row
-        $insert = false;
-
+        // save the old cached data in case we do not get a response from the server
+        $old = $response;
+    
     }
-
-    // save the old cached data in case we do not get a response from the server
-    $old = $response;
 
     // make a request of the remote server and see what comes back
     $response = request_remote($conn,$name,$type);
 
-    // if we didn't get a response from the server, serve up the stale cached data
-    // and exit the function
-    if(!$response){
-        return request_parse( $name, $type, $old );
-        //return $old;
-    }
+    if( $cache ){
+        // if we didn't get a response from the server, serve up the stale cached data
+        // and exit the function
+        if(!$response){
+            return request_parse( $name, $type, $old );
+            //return $old;
+        }
 
-    // if we got data from the server, we'll parse it now
-    // update our cache
-    request_update($name,$response,$conn,$insert);
+        // if we got data from the server, we'll parse it now
+        // update our cache
+        request_update($name,$response,$conn,$insert);
+
+    }
 
     // parse the response to clean our data up
     $response = request_parse( $name, $type, $response );
@@ -122,16 +135,42 @@ function request_remote($conn, $name, $type){
 
         // this is a static path in this version of manetheren-server
         $path = sprintf( Config::API_STRING_PHOTOS );
+    
+    } elseif( $type == Config::API_TYPE_RECIPES_INGREDIENTS ){
+
+        $ingredients = "chicken";
+        $number = "100";
+        if( isset($_GET['ingredients']) ){
+            $ingredients = $_GET['ingredients'];
+        }
+        if( isset($_GET['number']) ){
+            $number = $_GET['number'];
+        }
+        $path = sprintf( Config::API_STRING_RECIPES_INGREDIENTS, $ingredients, $number, Config::API_KEY_RECIPES );
+    
+    } elseif( $type == Config::API_TYPE_RECIPE ){
+        $id = "100";
+        if( isset($_GET['id']) ){
+            $id = $_GET['id'];
+        }
+        $path = sprintf( Config::API_STRING_RECIPE, $id, Config::API_KEY_RECIPES );
 
     // if no matching types, return null
     } else {
         return null;
     }
     
+
     // mask warnings we receive if there is no connection
     set_error_handler(function(){});
     // make the request of the foreign server
-    $api_data = file_get_contents($path);
+    $arrContextOptions=array(
+        "ssl"=>array(
+            "verify_peer"=>false,
+            "verify_peer_name"=>false,
+        ),
+    );
+    $api_data = file_get_contents($path, false, stream_context_create($arrContextOptions));
     // restore old error handler
     restore_error_handler();
 
@@ -207,8 +246,20 @@ function request_forecast(){
  * Calls for a response from the photos API
  */
 function request_photos(){
-    return request_api('photos',Config::API_TYPE_PHOTOS);
+    return request_api('photos',Config::API_TYPE_PHOTOS, false);
 }
 
+/**
+ * Calls for a response for recipe by ingredients API
+ */
+function request_recipes_ingredients(){
+    return request_api('recipes_ingredients',Config::API_TYPE_RECIPES_INGREDIENTS, false);
+}
 
+/**
+ * Calls for a response for a recipe API
+ */
+function request_recipe(){
+    return request_api('recipe',Config::API_TYPE_RECIPE, false);
+}
 ?>
