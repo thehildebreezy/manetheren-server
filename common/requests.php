@@ -9,6 +9,7 @@ require_once('database.php');
 require_once('settings.php');
 require_once('config.php');
 require_once('parsers.php');
+require_once('helpers.php');
 
 /**
  * Generalized function for processing a supplicants request to the proxy server
@@ -16,6 +17,7 @@ require_once('parsers.php');
  * response and returns our clean data.
  * @param name string name of the requested service we're processing - for caching/selecting
  * @param type int type of service being requested as a predefined value from Config class
+ * @param cache bool cache the response if true, default true
  * @return string the JSON string value of the service response
  */
 function request_api($name, $type, $cache = true){
@@ -136,43 +138,12 @@ function request_remote($conn, $name, $type){
         // this is a static path in this version of manetheren-server
         $path = sprintf( Config::API_STRING_PHOTOS );
     
-    } elseif( $type == Config::API_TYPE_RECIPES_INGREDIENTS ){
-
-        $ingredients = "chicken";
-        $number = "100";
-        if( isset($_GET['ingredients']) ){
-            $ingredients = $_GET['ingredients'];
-        }
-        if( isset($_GET['number']) ){
-            $number = $_GET['number'];
-        }
-        $path = sprintf( Config::API_STRING_RECIPES_INGREDIENTS, $ingredients, $number, Config::API_KEY_RECIPES );
-    
-    } elseif( $type == Config::API_TYPE_RECIPE ){
-        $id = "100";
-        if( isset($_GET['id']) ){
-            $id = $_GET['id'];
-        }
-        $path = sprintf( Config::API_STRING_RECIPE, $id, Config::API_KEY_RECIPES );
-
     // if no matching types, return null
     } else {
         return null;
     }
     
-
-    // mask warnings we receive if there is no connection
-    set_error_handler(function(){});
-    // make the request of the foreign server
-    $arrContextOptions=array(
-        "ssl"=>array(
-            "verify_peer"=>false,
-            "verify_peer_name"=>false,
-        ),
-    );
-    $api_data = file_get_contents($path, false, stream_context_create($arrContextOptions));
-    // restore old error handler
-    restore_error_handler();
+    $api_data = https_request_helper( $path );
 
     // and return the result to the end point
     return $api_data;
@@ -199,7 +170,7 @@ function request_parse( $name, $type, $data ){
 
     // otherwise fail
     } else {
-        return null;
+        return $data;
     }
     
     // initialize and parse the data
