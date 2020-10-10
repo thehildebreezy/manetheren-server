@@ -21,10 +21,10 @@ require_once('helpers.php');
 function valid_recipe_request( $request_type ){
 
     $request_check = $request_type - Config::API_TYPE_RECIPE_ADD;
-    $argument_check_remove = isset($_POST['id']);
-    $argument_check_add = $argument_check_remove && isset($_POST['data']) && isset($_POST['title'] && isset($_POST['image']));
-
-    return ($request_check == 0 && $argument_check_add) || ($request_check == 1 && $argument_check_remove);
+    $argument_check_remove = isset($_GET['id']) || isset($_POST['id']);
+    $argument_check_add = $argument_check_remove && isset($_POST['data']) && isset($_POST['title']) && isset($_POST['image']);
+    
+    return ($request_check == 0 && $argument_check_add) || (($request_check == 1 || $request_check == 2 ) && $argument_check_remove);
 }
 
 /**
@@ -32,6 +32,12 @@ function valid_recipe_request( $request_type ){
  */
 function search_recipes( $query = "chicken" ){
     $path = sprintf(Config::API_STRING_RECIPE_SEARCH, $query);
+    $result = https_request_helper($path);
+    return $result;
+}
+
+function get_single_recipe( $id ){
+    $path = sprintf(Config::API_STRING_RECIPE, $id);
     $result = https_request_helper($path);
     return $result;
 }
@@ -46,7 +52,7 @@ function get_by_id( $id, $db = null ){
     // open connection
     $conn = $db ?: new Database('settings');
     // process and execute statement
-    $conn->statement("SELECT * FROM recipes WHERE recipeid=?");
+    $conn->statement("SELECT * FROM recipes WHERE recipe_id=?");
     $conn->execute([$id]);
     return $conn;
 }
